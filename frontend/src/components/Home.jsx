@@ -89,12 +89,13 @@ export default function Home() {
 }
 
 // 2D reel for browsers without WebGPU. Occupies the same stage slot as the canvas.
+// Photos are listed last → first (reverse of the stored order).
 function FallbackReel({ content }) {
   const reel = content?.reel || [];
   return (
     <div className="scene-canvas fallback-stage">
       <div className="film-fallback">
-        {reel.map((r) => (
+        {reel.slice().reverse().map((r) => (
           <div className="film-cell" key={r.id}>
             <img src={r.url} alt={r.caption || ''} />
           </div>
