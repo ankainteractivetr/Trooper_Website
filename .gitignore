@@ -1,0 +1,60 @@
+# ============================================================================
+#  AnkA Interactive — root .gitignore (backend + frontend)
+# ============================================================================
+
+# --- Dependencies ---
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# --- Environment / secrets (NEVER commit) ---
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+# Keep the templates tracked:
+!.env.example
+!**/.env.example
+
+# --- Build output ---
+dist/
+build/
+**/dist/
+**/build/
+.vite/
+
+# --- User-uploaded media (keep folder + seed images, ignore the rest) ---
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/seed/
+!backend/uploads/seed/**
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Caches / tooling ---
+.cache/
+.eslintcache
+.npm/
+.parcel-cache/
+coverage/
+*.tsbuildinfo
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Misc ---
+*.local
