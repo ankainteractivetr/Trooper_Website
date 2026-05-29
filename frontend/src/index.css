@@ -367,9 +367,11 @@ a:hover { color: var(--accent-glow); text-shadow: 0 0 12px var(--accent-glow); }
     position: relative;
     inset: auto;
     order: 1;
-    width: 100%;
+    width: auto;            /* inset like the bio panel below, not edge-to-edge */
     height: 46vh;
-    margin: 0;
+    margin: 0 10px;         /* mirrors .holo-wrap's 10px side margins */
+    border-radius: 6px;
+    overflow: hidden;       /* keep the rounded corners clean */
   }
 
   .holo-wrap {

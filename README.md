@@ -11,9 +11,9 @@ an admin panel.
 
 - **Film reel** (left): true 3D — a vertical cylinder of image quads, each photo a
   layer of a `texture_2d_array`, lit with a key light + cyan fresnel rim, spinning.
-- **Title** (top): true 3D — the name drawn to a neon texture and extruded across
-  stacked, depth-offset quads.
 - **Space background**: true 3D — a full-screen procedural nebula + starfield shader.
+- **Title** (top): a plain **HTML `<h1>`** styled with CSS (neon glow), centred over
+  the scene — far easier to place and align pixel-perfectly than extruded 3D text.
 - **Bio panel** (right): a holographic **HTML/CSS** console floating over the 3D
   scene. Long paragraphs of prose are far more readable as crisp DOM text than as
   raw 3D geometry, so this part is deliberately styled (glass blur, scanlines, HUD
@@ -34,7 +34,8 @@ an admin panel.
 - **MySQL 8+** (or MariaDB 10.4+) running locally
 - A **WebGPU-capable browser** for the 3D experience: **Chrome / Edge 113+**
   (Safari 18+ and Firefox with the flag also work). Without WebGPU the site shows a
-  graceful 2D fallback.
+  graceful 2D fallback that lists the reel photos newest-first. The layout is
+  responsive: on narrow screens it stacks vertically (title → reel → bio → social).
 
 ---
 
@@ -132,10 +133,9 @@ trooper-website/
     └── src/
         ├── gpu/        raw WebGPU layer (no three.js)
         │   ├── math.js       column-major mat4 (WebGPU [0,1] depth)
-        │   ├── shaders.js    WGSL: background, reel, title
+        │   ├── shaders.js    WGSL: background + film reel
         │   ├── textures.js   image loading / cover-crop
         │   ├── FilmReel.js   cylinder mesh + texture_2d_array
-        │   ├── TitleText.js  neon texture + extruded quad stack
         │   └── Renderer.js   device, pipelines, camera, draw loop
         ├── components/  Home, HologramPanel, SocialBar, Unsupported, Admin
         ├── api.js       backend client
@@ -148,12 +148,10 @@ trooper-website/
 
 The visual constants are grouped at the top of each GPU module for easy tweaking:
 
-- **Camera / composition** — `frontend/src/gpu/Renderer.js` (`FOV`, `REEL_POS`,
-  `TITLE_POS`, `CAM_TARGET`, `CAM_EYE`, `REEL_SPIN`).
+- **Camera / composition** — `frontend/src/gpu/Renderer.js` (`FOV`, `REEL_POS_X`,
+  `REEL_POS_Y`, `REEL_SPIN`, `CAM_TARGET`, `CAM_EYE`).
 - **Reel geometry** — `frontend/src/gpu/FilmReel.js` (`RADIUS`, `HALF_H`,
   `SEGMENTS_PER_FRAME`, `V_BORDER`).
-- **Title depth** — `frontend/src/gpu/TitleText.js` (`QUAD_H`, `LAYERS_BACK`,
-  `LAYER_STEP`).
 
 If anything looks off on first run (positioning, size, spin speed), these are the
 knobs to turn — the renderer is fully modular so individual pieces are easy to
