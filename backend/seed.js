@@ -12,13 +12,13 @@ const ABOUT = `<p>Hello Everyone. I'm Caner 'Trooper' Kurt. Welcome to my person
 <p>Until Next Time!</p>`;
 
 const SOCIAL = [
-  { platform: 'LinkedIn',  url: 'https://www.linkedin.com/in/canerbaba387',         icon: 'linkedin.png'  },
-  { platform: 'Instagram', url: 'https://www.instagram.com/canerbaba_387_official', icon: 'instagram.png' },
-  { platform: 'Twitter',   url: 'https://twitter.com/canerbaba387',                 icon: 'twitter.png'   },
-  { platform: 'YouTube',   url: 'https://www.youtube.com/@canerbaba387',            icon: 'youtube.png'   },
-  { platform: 'Spotify',   url: 'https://open.spotify.com/user/ankatrooper',        icon: 'spotify.png'   },
-  { platform: 'Steam',     url: 'https://steamcommunity.com/id/CanerBaba387',       icon: 'steam.png'     },
-  { platform: 'IMDB',      url: 'https://www.imdb.com/user/ur92703026/',            icon: 'imdb.png'      },
+  { platform: 'LinkedIn',  url: 'https://www.linkedin.com/in/canerbaba387',               icon: 'linkedin.png'  },
+  { platform: 'GitHub',    url: 'https://github.com/orgs/ankainteractivetr/repositories', icon: 'github.png'    },
+  { platform: 'Instagram', url: 'https://www.instagram.com/canerbaba_387_official',       icon: 'instagram.png' },
+  { platform: 'YouTube',   url: 'https://www.youtube.com/@canerbaba387',                  icon: 'youtube.png'   },
+  { platform: 'Spotify',   url: 'https://open.spotify.com/user/ankatrooper',              icon: 'spotify.png'   },
+  { platform: 'Steam',     url: 'https://steamcommunity.com/id/CanerBaba387',             icon: 'steam.png'     },
+  { platform: 'IMDB',      url: 'https://www.imdb.com/user/ur92703026/',                  icon: 'imdb.png'      },
 ];
 
 // Order: trooper_00..

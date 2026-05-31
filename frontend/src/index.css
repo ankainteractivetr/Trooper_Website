@@ -233,6 +233,14 @@ a:hover { color: var(--accent-glow); text-shadow: 0 0 12px var(--accent-glow); }
 @keyframes riseFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes flicker { 0%,100% { opacity: 1; } 48% { opacity: 1; } 50% { opacity: 0.82; } 52% { opacity: 1; } }
 
+/* HUD reveal — the bio panel + social bar only mount once the reel has been
+   painted (see Home.jsx), then fade/rise into place like a booting overlay. */
+@keyframes uiFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes uiFadeRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.holo-wrap { animation: uiFadeIn 0.55s ease both; }       /* opacity only → keeps desktop translateY(-50%) */
+.social-bar { animation: uiFadeRise 0.55s ease 0.08s both; }
+
 /* ── WebGPU-unsupported banner ─────────────────────────────────────────── */
 .unsupported-banner {
   position: fixed;
@@ -367,8 +375,9 @@ a:hover { color: var(--accent-glow); text-shadow: 0 0 12px var(--accent-glow); }
     position: relative;
     inset: auto;
     order: 1;
-    width: auto;            /* inset like the bio panel below, not edge-to-edge */
+    width: auto;            /* same width as the bio panel below (10px side margins) */
     height: 46vh;
+    min-height: 300px;      /* keep the reel readable on short / landscape phones */
     margin: 0 10px;         /* mirrors .holo-wrap's 10px side margins */
     border-radius: 6px;
     overflow: hidden;       /* keep the rounded corners clean */
