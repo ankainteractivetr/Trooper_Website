@@ -21,6 +21,16 @@ const REEL_SPIN = -0.28;            // radians / second (negative = reversed)
 const CAM_TARGET = [0.0, 0.35, 0.0];
 const CAM_EYE = [0.0, 0.7, 11.0];
 
+// Reel half-height — MUST stay in sync with HALF_H in FilmReel.js.
+const REEL_HALF_H = 1.35;
+
+// Stacked (mobile/tablet) framing: how much of the in-flow stage the centred
+// reel should fill. The camera is dollied to satisfy these regardless of the
+// canvas aspect ratio, so the reel is as wide as the bio panel below it.
+const STACK_FILL_W = 0.94;   // fraction of stage WIDTH the reel may span
+const STACK_FILL_H = 0.86;   // fraction of stage HEIGHT the reel may span
+const STACK_MIN_DIST = 6.2;  // never dolly closer than this (avoids fish-eye)
+
 function hexToRgb(hex) {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec((hex || '').trim());
   if (!m) return [1.0, 0.176, 0.176];
@@ -49,6 +59,10 @@ export class Renderer {
     this._tmpA = mat4.create();
     this._tmpB = mat4.create();
     this._model = mat4.create();
+
+    this.layout = 'desktop';      // 'desktop' = reel left | 'stacked' = reel centred + framed
+    this.onFirstFrame = null;     // fired once, right after the first frame is painted
+    this._firstFrameDone = false;
   }
 
   async init(canvas) {
@@ -166,6 +180,23 @@ export class Renderer {
     }
   }
 
+  // Layout mode is driven by the React layer (media query): 'desktop' keeps the
+  // reel in the left half (HTML panel on the right); 'stacked' centres it.
+  setLayout(mode) {
+    this.layout = mode === 'stacked' ? 'stacked' : 'desktop';
+  }
+
+  // Camera distance that frames the centred reel to fill the stacked stage at
+  // ANY aspect: fill by width, but back off if that would clip it vertically.
+  _stackedDistance(aspect) {
+    const tanHalf = Math.tan(FOV / 2);
+    const a = Math.max(aspect, 0.0001);
+    const radius = this.reel?.radius || 2.3;
+    const dWidth = radius / (STACK_FILL_W * tanHalf * a);
+    const dHeight = REEL_HALF_H / (STACK_FILL_H * tanHalf);
+    return Math.max(dWidth, dHeight, STACK_MIN_DIST);
+  }
+
   start() {
     if (this._running) return;
     this._running = true;
@@ -173,6 +204,10 @@ export class Renderer {
     const loop = () => {
       if (!this._running) return;
       this._frame((performance.now() - this._start) / 1000);
+      if (!this._firstFrameDone) {
+        this._firstFrameDone = true;
+        try { this.onFirstFrame?.(); } catch { /* ignore */ }
+      }
       this._raf = requestAnimationFrame(loop);
     };
     this._raf = requestAnimationFrame(loop);
@@ -189,15 +224,25 @@ export class Renderer {
     const w = this.canvas.width;
     const h = this.canvas.height;
     const aspect = w / h;
-    const wide = aspect > 1.2; // desktop-ish (reel goes left) vs narrow (reel centred)
+    const stacked = this.layout === 'stacked';
 
-    // On narrow viewports pull the camera back so the reel fits its smaller box.
-    const distBoost = aspect < 1 ? (1 / aspect) * 3.0 : aspect < 1.4 ? 1.0 : 0;
-    const eye = [
-      0,
-      CAM_EYE[1] + Math.sin(t * 0.2) * 0.12,
-      CAM_EYE[2] + distBoost + Math.cos(t * 0.13) * 0.2,
-    ];
+    // Reel framing & camera dolly:
+    //  • desktop → reel in the LEFT half, fixed dolly (right half = HTML panel)
+    //  • stacked → reel CENTRED and dollied to fill the stage at any aspect,
+    //              so it spans the same width as the bio panel beneath it.
+    let eyeZ;
+    let reelX;
+    if (stacked) {
+      eyeZ = this._stackedDistance(aspect) + Math.cos(t * 0.13) * 0.12;
+      reelX = 0;
+    } else {
+      // Only nudges back on unusually narrow desktop windows; 0 at normal widths.
+      const distBoost = aspect < 1.4 ? Math.max(0, (1.4 - aspect) * 2.4) : 0;
+      eyeZ = CAM_EYE[2] + distBoost + Math.cos(t * 0.13) * 0.2;
+      reelX = REEL_POS_X;
+    }
+
+    const eye = [0, CAM_EYE[1] + Math.sin(t * 0.2) * 0.12, eyeZ];
     mat4.lookAt(this.view, eye, CAM_TARGET, [0, 1, 0]);
 
     this.globals.set(this.view, 0);
@@ -209,7 +254,6 @@ export class Renderer {
     dev.queue.writeBuffer(this.globalsBuffer, 0, this.globals);
 
     if (this.reel.ready) {
-      const reelX = wide ? REEL_POS_X : 0;   // centre the reel on narrow screens
       mat4.rotationY(this._tmpA, t * REEL_SPIN);
       mat4.translation(this._tmpB, reelX, REEL_POS_Y, 0);
       mat4.multiply(this._model, this._tmpB, this._tmpA);
