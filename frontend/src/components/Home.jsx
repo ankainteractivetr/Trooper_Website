@@ -5,12 +5,18 @@ import HologramPanel from './HologramPanel.jsx';
 import SocialBar from './SocialBar.jsx';
 import Unsupported from './Unsupported.jsx';
 
+// Matches the CSS breakpoint in index.css (stacked, scrollable layout).
+const STACK_QUERY = '(max-width: 880px)';
+const isStacked = () =>
+  typeof window !== 'undefined' && window.matchMedia(STACK_QUERY).matches;
+
 export default function Home() {
   const canvasRef = useRef(null);
   const rendererRef = useRef(null);
   const [content, setContent] = useState(null);
   const [status, setStatus] = useState('loading'); // loading | ready | unsupported | error
   const [errorMsg, setErrorMsg] = useState('');
+  const [revealUI, setRevealUI] = useState(false); // HUD shows only after the reel is painted
 
   useEffect(() => {
     let cancelled = false;
@@ -34,14 +40,26 @@ export default function Home() {
         await renderer.init(canvasRef.current);
         await renderer.setContent(data);
         if (cancelled) { renderer.destroy(); return; }
+
+        // Frame the reel for the current layout, then start the render loop.
+        renderer.setLayout(isStacked() ? 'stacked' : 'desktop');
         renderer.start();
         setStatus('ready');
+
+        // Renderer is fully initialized now (canvas + textures + reel built and
+        // the loop running → the reel paints on the very next frame). Reveal the
+        // HUD immediately so the bio panel and the reel come up together.
+        setRevealUI(true);
       } catch (e) {
         console.warn('[Home] WebGPU init failed:', e);
         rendererRef.current = null;
         try { renderer?.destroy(); } catch { /* ignore */ }
         renderer = null;
-        if (!cancelled) setStatus('unsupported');
+        if (!cancelled) {
+          // 2D fallback reel + HUD appear together.
+          setStatus('unsupported');
+          setRevealUI(true);
+        }
       }
     })();
 
@@ -50,6 +68,16 @@ export default function Home() {
       try { rendererRef.current?.destroy(); } catch { /* ignore */ }
       rendererRef.current = null;
     };
+  }, []);
+
+  // Keep the renderer's reel framing in sync with the CSS layout breakpoint
+  // (desktop ⇄ stacked) on resize / orientation change.
+  useEffect(() => {
+    const mq = window.matchMedia(STACK_QUERY);
+    const apply = () => rendererRef.current?.setLayout(mq.matches ? 'stacked' : 'desktop');
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
   }, []);
 
   return (
@@ -62,8 +90,8 @@ export default function Home() {
         ? <FallbackReel content={content} />
         : <canvas ref={canvasRef} className="scene-canvas" />}
 
-      {content && <HologramPanel content={content} />}
-      {content && <SocialBar social={content.social} />}
+      {content && revealUI && <HologramPanel content={content} />}
+      {content && revealUI && <SocialBar social={content.social} />}
 
       {status === 'unsupported' && <Unsupported />}
 
